@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+/* ===== Design tokens (Tailwind v4) ===== */
+@theme {
+  /* Fonts */
+  --font-sans: Inter, ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial,
+    "Apple Color Emoji", "Segoe UI Emoji";
+  --font-heading: "Space Grotesk", Inter, ui-sans-serif, system-ui;
+
+  /* Colors (generate utilities: text-*, bg-*, border-* ) */
+  --color-brand: #f05a28;
+  /* brand orange */
+  --color-brand-600: #e24d1b;
+  --color-brand-700: #c94312;
+
+  --color-peach: #f8c1a8;
+  /* hero bg */
+  --color-peach-50: #fff0ea;
+  /* light peach */
+
+  --color-ink: #1f2937;
+  /* main text */
+  --color-ink-2: #374151;
+  /* secondary text */
+
+  --color-line: #e5e7eb;
+  /* borders */
+  --color-panel: #ffffff;
+  /* cards/surfaces */
+  --color-appbg: #fafafa;
+  /* app background */
+}
+
+/* ===== Global base ===== */
+html,
+body {
+  @apply font-sans text-ink bg-appbg;
+}
+
+/* iPad fullscreen helper */
+:root {
+  --vh: 100dvh;
+}
+
+/* Feedback screen helper */
+.feedback-screen {
+  min-height: 100dvh;
+  height: 100dvh;
+}
+
+/* ===== (Optional) legacy helper classes =====
+   You can remove these if you switch to Tailwind utilities everywhere:
+   text-brand → use `text-brand`
+   bg-brand   → use `bg-brand`
+   border-line → use `border-line`
+   bg-peach   → use `bg-peach`
+   bg-peach-50 → use `bg-peach-50`
+*/
+.text-brand {
+  color: var(--color-brand);
+}
+
+.bg-brand {
+  background-color: var(--color-brand);
+}
+
+.border-line {
+  border-color: var(--color-line);
+}
+
+.bg-peach {
+  background-color: var(--color-peach);
+}
+
+.bg-peach-50 {
+  background-color: var(--color-peach-50);
+}
