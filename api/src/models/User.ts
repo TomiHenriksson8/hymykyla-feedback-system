@@ -1,4 +1,3 @@
-
 import mongoose, { Schema, model, Model, Types } from 'mongoose';
 
 export interface User {

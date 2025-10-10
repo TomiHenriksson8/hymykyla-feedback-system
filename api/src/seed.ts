@@ -5,8 +5,6 @@ import SurveyModel from './models/Survey';
 async function seed() {
   try {
     await connectDB();
-
-    // Optional: wipe existing surveys for a clean start
     await SurveyModel.deleteMany({});
 
     const survey = await SurveyModel.create({

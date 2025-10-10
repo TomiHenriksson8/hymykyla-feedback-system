@@ -12,8 +12,6 @@ async function start() {
     server = app.listen(env.PORT, () => {
       console.log(`✅ API listening on :${env.PORT} (${env.NODE_ENV})`);
     });
-
-    // Helpful timeouts (production-friendly)
     server.headersTimeout = 65_000; // default 60_000 + a bit
     server.keepAliveTimeout = 60_000; // match reverse proxy if any
   } catch (err) {

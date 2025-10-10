@@ -1,5 +1,3 @@
-
-// api/src/models/Response.ts
 import mongoose, { Schema, model, Types, Model, HydratedDocument } from 'mongoose';
 
 export interface Answer {

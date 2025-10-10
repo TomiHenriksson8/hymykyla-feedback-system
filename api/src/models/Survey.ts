@@ -1,5 +1,3 @@
-
-
 import mongoose, { Schema, model, Types, Model, HydratedDocument } from 'mongoose';
 
 export type QuestionType = 'scale5' | 'boolean' | 'text';
@@ -16,7 +14,7 @@ export interface Question {
 }
 
 export interface Survey {
-  _id?: Types.ObjectId; // include _id so lean() types it
+  _id?: Types.ObjectId;
   title: string;
   version: number;
   isActive: boolean;
