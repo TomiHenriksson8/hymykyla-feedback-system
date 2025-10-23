@@ -1,7 +1,6 @@
 
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import AppShell from './components/AppShell';
-
 import FeedbackPage from './feedback/pages/FeedbackPage';
 
 import AdminLayout from './admin/pages/AdminLayout';
