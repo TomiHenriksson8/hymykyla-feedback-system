@@ -9,7 +9,7 @@ export default function AdminLayout() {
       <AdminSidebar />
       <div className="grid grid-rows-[56px_1fr]">
         <AdminTopbar />
-        <main className="p-6">
+        <main className="">
           <Outlet />
         </main>
       </div>

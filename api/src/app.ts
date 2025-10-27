@@ -27,7 +27,7 @@ app.get('/health', (_req, res) => res.send('ok'));
 app.get('/ready', (_req, res) => res.send('ready'));
 
 app.use('/auth', authRoutes);
-app.use('/survey', surveyRoutes);
+app.use('/surveys', surveyRoutes);
 app.use('/feedback', feedbackRoutes);
 app.use('/admin', requireAuth, adminRoutes);
 

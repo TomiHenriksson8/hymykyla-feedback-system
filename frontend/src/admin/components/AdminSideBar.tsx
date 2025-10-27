@@ -29,7 +29,7 @@ export default function AdminSidebar() {
       <nav className="space-y-1">
         <NavLink to="/hallinta" end className={({ isActive }) => `${link} ${isActive ? active : ''}`}>Yhteenveto</NavLink>
         <NavLink to="/hallinta/vastaukset" className={({ isActive }) => `${link} ${isActive ? active : ''}`}>Vastaukset</NavLink>
-        <NavLink to="/hallinta/analytiikka" className={({ isActive }) => `${link} ${isActive ? active : ''}`}>Analytiikka</NavLink>
+        <NavLink to="/hallinta/kyselyt" className={({ isActive }) => `${link} ${isActive ? active : ''}`}>Kyselyt</NavLink>
         <NavLink to="/hallinta/asetukset" className={({ isActive }) => `${link} ${isActive ? active : ''}`}>Asetukset</NavLink>
       </nav>
     </aside>

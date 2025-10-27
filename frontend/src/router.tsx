@@ -13,6 +13,9 @@ import SettingsPage from './admin/pages/SettingsPage';
 import LoginPage from './admin/pages/LoginPage';
 import RequireAuth from './auth/RequireAuth';
 
+import SurveyBuilderPage from './admin/pages/SurveyBuilderPage';
+import SurveysPage from './admin/pages/SurveyPage';
+
 export const router = createBrowserRouter([
   {
     path: '/',
@@ -35,7 +38,10 @@ export const router = createBrowserRouter([
               { path: 'vastaukset', element: <ResponsesPage /> },
               { path: 'analytiikka', element: <AnalyticsPage /> },
               { path: 'asetukset', element: <SettingsPage /> },
-              // (Add kyselyt pages later)
+
+              /* NEW: surveys list + editor */
+              { path: 'kyselyt', element: <SurveysPage /> },
+              { path: 'kyselyt/:id', element: <SurveyBuilderPage /> },
             ],
           },
         ],
@@ -45,3 +51,4 @@ export const router = createBrowserRouter([
     ],
   },
 ]);
+
