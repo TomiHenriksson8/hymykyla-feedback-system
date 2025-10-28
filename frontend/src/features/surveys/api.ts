@@ -1,7 +1,7 @@
 import { deleteReq, getJSON, patchJSON, postJSON, putJSON } from "../../lib/api";
 import type { Survey, Question } from "./types";
 
-const BASE = "/admin/surveys";
+const BASE = "/surveys";
 
 /* ---------------- helpers to normalize shapes ---------------- */
 function listFrom(data: any): Survey[] {
