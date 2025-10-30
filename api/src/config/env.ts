@@ -1,4 +1,3 @@
-
 import 'dotenv/config';
 
 function requireEnv(name: string) {

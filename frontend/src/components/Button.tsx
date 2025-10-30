@@ -1,4 +1,3 @@
-
 type Props = React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: 'brand' | 'outline' }
 export default function Button({ variant = 'brand', className = '', ...props }: Props) {
   const style = variant === 'brand'
