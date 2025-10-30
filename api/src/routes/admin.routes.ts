@@ -1,20 +1,17 @@
 
 import { Router } from 'express';
-import { getSurveyById, health, listResponses, listSurveys, me } from '../controllers/admin.controller';
-
+import { requireAuth } from '../middleware/auth';
+import { health } from '../controllers/admin.controller';
+import { me } from '../controllers/auth.controller';
 
 const router = Router();
+
+router.use(requireAuth)
 
 // Basic admin health & identity
 router.get('/health', health);
 router.get('/me', me);
 
-// Responses
-router.get('/responses', listResponses);
-
-// Surveys
-router.get('/surveys', listSurveys);
-router.get('/surveys/:id', getSurveyById);
 
 export default router;
 

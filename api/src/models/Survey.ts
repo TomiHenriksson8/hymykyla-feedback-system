@@ -5,7 +5,7 @@ export type QuestionType = 'scale5' | 'boolean' | 'text';
 export interface Question {
   _id: Types.ObjectId;
   type: QuestionType;
-  prompt: { fi: string; en: string; sv: string };
+  prompt: { fi: string | null; en: string | null; sv: string | null };
   required?: boolean;
   order: number;
   min?: number;
@@ -27,11 +27,14 @@ const QuestionSchema = new Schema<Question>(
   {
     _id: { type: Schema.Types.ObjectId, auto: true },
     type: { type: String, enum: ['scale5', 'boolean', 'text'], required: true },
+
+    // Make locales optional + default to null
     prompt: {
-      fi: { type: String, required: true },
-      en: { type: String, required: true },
-      sv: { type: String, required: true },
+      fi: { type: String, required: false, default: null },
+      en: { type: String, required: false, default: null },
+      sv: { type: String, required: false, default: null },
     },
+
     required: { type: Boolean, default: false },
     order: { type: Number, required: true },
     min: { type: Number, default: 1 },
@@ -40,6 +43,23 @@ const QuestionSchema = new Schema<Question>(
   },
   { _id: false }
 );
+
+// Ensure at least one locale is present (non-empty string after trim)
+QuestionSchema.pre('validate', function (next) {
+  const p = (this as any).prompt || {};
+  const has =
+    (typeof p.fi === 'string' && p.fi.trim().length > 0) ||
+    (typeof p.en === 'string' && p.en.trim().length > 0) ||
+    (typeof p.sv === 'string' && p.sv.trim().length > 0);
+
+  if (has) return next();
+  return next(
+    new mongoose.Error.ValidatorError({
+      path: 'prompt',
+      message: 'At least one of prompt.fi/en/sv is required',
+    })
+  );
+});
 
 const SurveySchema = new Schema<Survey>(
   {
@@ -59,4 +79,3 @@ const SurveyModel: Model<Survey> =
   (mongoose.models.Survey as Model<Survey>) || model<Survey>('Survey', SurveySchema);
 
 export default SurveyModel;
-

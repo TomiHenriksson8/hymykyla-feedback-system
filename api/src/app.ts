@@ -5,12 +5,12 @@ import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
 import { env } from './config/env';
-import { requireAuth } from './middleware/auth';
 
 import surveyRoutes from './routes/survey.routes';
 import feedbackRoutes from './routes/feedback.routes';
 import authRoutes from './routes/auth.routes';
 import adminRoutes from './routes/admin.routes';
+import responseRoutes from './routes/response.routes'
 
 export const app = express();
 
@@ -29,7 +29,8 @@ app.get('/ready', (_req, res) => res.send('ready'));
 app.use('/auth', authRoutes);
 app.use('/surveys', surveyRoutes);
 app.use('/feedback', feedbackRoutes);
-app.use('/admin', requireAuth, adminRoutes);
+app.use('/responses', responseRoutes)
+app.use('/admin', adminRoutes);
 
 app.get('/', (_req, res) => res.json({ name: 'hymykylä-api', status: 'running' }));
 

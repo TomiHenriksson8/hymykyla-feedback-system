@@ -1,4 +1,3 @@
-
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import Survey from '../models/Survey';
@@ -9,13 +8,44 @@ function isNonEmptyString(x: unknown): x is string {
   return typeof x === 'string' && x.trim().length > 0;
 }
 
-function validateQuestion(q: any) {
+function strOrNull(v: unknown): string | null {
+  if (v == null) return null;
+  const s = String(v).trim();
+  return s.length ? s : null;
+}
+
+function normalizePrompt(p: any) {
+  return {
+    fi: strOrNull(p?.fi),
+    en: strOrNull(p?.en),
+    sv: strOrNull(p?.sv),
+  };
+}
+
+function atLeastOneLocaleFilled(p: { fi: string | null; en: string | null; sv: string | null }) {
+  return !!(p.fi || p.en || p.sv);
+}
+
+function validateQuestion(q: any, mode: 'create' | 'update' = 'update') {
   if (!q) throw new Error('Question missing');
   if (!['scale5', 'boolean', 'text'].includes(q.type)) throw new Error('Invalid question.type');
-  if (!q.prompt || !isNonEmptyString(q.prompt.fi) || !isNonEmptyString(q.prompt.en) || !isNonEmptyString(q.prompt.sv)) {
-    throw new Error('Question.prompt fi/en/sv required');
-  }
   if (typeof q.order !== 'number') throw new Error('Question.order required');
+
+  if (!q.prompt) throw new Error('Question.prompt required');
+  const prompt = normalizePrompt(q.prompt);
+
+  if (mode === 'create') {
+    if (!prompt.fi || !prompt.en || !prompt.sv) {
+      throw new Error('Question.prompt fi/en/sv required on create');
+    }
+  } else {
+    if (!atLeastOneLocaleFilled(prompt)) {
+      throw new Error('At least one locale in Question.prompt must be non-empty');
+    }
+  }
+
+  // normalize prompt before saving
+  q.prompt = prompt;
 
   if (q.type === 'scale5') {
     const min = q.min ?? 1;
@@ -24,9 +54,12 @@ function validateQuestion(q: any) {
       throw new Error('scale5 must have 1 ≤ min ≤ max ≤ 5');
     }
   }
+
   if (q.type === 'text') {
     const maxLength = q.maxLength ?? 1000;
-    if (!(Number.isInteger(maxLength) && maxLength > 0)) throw new Error('text.maxLength must be > 0');
+    if (!(Number.isInteger(maxLength) && maxLength > 0)) {
+      throw new Error('text.maxLength must be > 0');
+    }
   }
 }
 
@@ -45,7 +78,7 @@ function validateSurveyPayload(payload: any) {
   if (!Array.isArray(payload.questions) || payload.questions.length === 0) {
     throw new Error('questions must be a non-empty array');
   }
-  payload.questions.forEach(validateQuestion);
+  payload.questions.forEach((q: any) => validateQuestion(q, 'create'));
   ensureUniqueOrder(payload.questions);
 }
 
@@ -191,7 +224,7 @@ export const patchSurvey = async (req: Request, res: Response) => {
       if (!Array.isArray(payload.questions) || payload.questions.length === 0) {
         return badRequest(res, 'questions_non_empty_required');
       }
-      payload.questions.forEach(validateQuestion);
+      payload.questions.forEach((q: any) => validateQuestion(q, 'update'));
       ensureUniqueOrder(payload.questions);
     }
     if (payload.title && !isNonEmptyString(payload.title)) return badRequest(res, 'invalid_title');
@@ -274,7 +307,7 @@ export const addQuestion = async (req: Request, res: Response) => {
     if (!mongoose.isValidObjectId(id)) return badRequest(res, 'invalid_id');
 
     const q = req.body;
-    validateQuestion(q);
+    validateQuestion(q, 'create');
 
     const updated = await Survey.findByIdAndUpdate(
       id,
@@ -318,7 +351,7 @@ export const patchQuestion = async (req: Request, res: Response) => {
 
     const patch = req.body || {};
     const candidate = { ...sub.toObject(), ...patch };
-    validateQuestion(candidate);
+    validateQuestion(candidate, 'update');
 
     (sub as any).set(patch);
     ensureUniqueOrder(survey.questions as any[]);
@@ -393,7 +426,7 @@ export const replaceQuestions = async (req: Request, res: Response) => {
     if (!Array.isArray(questions) || questions.length === 0) {
       return badRequest(res, 'questions_non_empty_required');
     }
-    questions.forEach(validateQuestion);
+    questions.forEach((q: any) => validateQuestion(q, 'update'));
     ensureUniqueOrder(questions);
 
     const updated = await Survey.findByIdAndUpdate(
@@ -409,4 +442,3 @@ export const replaceQuestions = async (req: Request, res: Response) => {
     return badRequest(res, err.message || 'validation_error');
   }
 };
-
