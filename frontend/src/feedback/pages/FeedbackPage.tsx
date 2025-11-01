@@ -1,15 +1,23 @@
 // frontend/src/feedback/pages/FeedbackPage.tsx
 
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom'; 
 import { useActiveSurvey } from '../../features/surveys/publicHooks';
+import { useSubmitFeedback } from '../feedbackHooks'; 
+import type { Survey, Question } from '../../features/surveys/types'; 
 
 // This is the main page component
 export default function FeedbackPage() {
   // 1. Fetch the active survey using our new hook
   const { data: survey, isLoading, isError } = useActiveSurvey();
 
+  // NEW: Get the navigate function
+  const navigate = useNavigate();
+
+  // NEW: Get the mutation function from our hook
+  const submitFeedback = useSubmitFeedback();
+
   // 2. State to hold the user's answers.
-  // We will store it in an object like: { questionId: answer, ... }
   const [answers, setAnswers] = useState<Record<string, any>>({});
 
   // 3. A helper function to update the state when an answer changes
@@ -24,6 +32,40 @@ export default function FeedbackPage() {
   const questions = useMemo(() => {
     return survey?.questions.sort((a, b) => a.order - b.order) ?? [];
   }, [survey]);
+
+  // Handle Form Submission ---
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault(); // Stop the page from reloading
+    if (!survey) return; // Safety check
+
+    // Format the answers from our state object into the array the backend expects
+    const formattedAnswers = Object.entries(answers).map(([questionId, value]) => {
+      // Find the question to get its 'type'
+      const q = questions.find((q) => q._id === questionId) as Question;
+
+      if (q.type === 'scale5') {
+        return { questionId, type: 'scale5', valueNumber: Number(value) };
+      }
+      if (q.type === 'boolean') {
+        return { questionId, type: 'boolean', valueBoolean: Boolean(value) };
+      }
+      return { questionId, type: 'text', valueText: String(value) };
+    });
+
+    // Call the mutation
+    submitFeedback.mutate(
+      {
+        surveyId: survey._id,
+        answers: formattedAnswers,
+      },
+      {
+        // On success, navigate to the thank you page
+        onSuccess: () => {
+          navigate('/palaute/kiitos', { replace: true });
+        },
+      }
+    );
+  }
 
   // --- Render logic ---
 
@@ -47,8 +89,8 @@ export default function FeedbackPage() {
           Kiitos, että annat palautetta!
         </p>
 
-        {/* The Form */}
-        <form className="space-y-10">
+        {/* The Form - : added onSubmit */}
+        <form className="space-y-10" onSubmit={handleSubmit}>
           {/* Loop over each question and render it */}
           {questions.map((question) => (
             <div key={question._id}>
@@ -82,13 +124,25 @@ export default function FeedbackPage() {
             </div>
           ))}
 
-          {/* Submit Button (we will make this work next) */}
+          {/* Show error message on failure */}
+          {submitFeedback.isError && (
+            <div className="text-red-600 text-center">
+              Palautteen lähettäminen epäonnistui. Yritä uudelleen.
+            </div>
+          )}
+
+          {/* Submit Button -: added disabled state */}
           <div className="pt-6 border-t border-line">
             <button
               type="submit"
-              className="w-full px-6 py-4 rounded-xl bg-brand text-white text-lg font-semibold hover:bg-brand-600"
+              disabled={submitFeedback.isPending} // Disable button while submitting
+              className="
+                w-full px-6 py-4 rounded-xl bg-brand text-white text-lg font-semibold 
+                hover:bg-brand-600 transition
+                disabled:opacity-50 disabled:cursor-not-allowed
+              "
             >
-              Lähetä palaute
+              {submitFeedback.isPending ? 'Lähetetään...' : 'Lähetä palaute'}
             </button>
           </div>
         </form>
