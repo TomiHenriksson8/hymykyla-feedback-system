@@ -1,7 +1,11 @@
+// frontend/src/router.tsx
 
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import AppShell from './components/AppShell';
 import FeedbackPage from './feedback/pages/FeedbackPage';
+
+// 1. IMPORT YOUR NEW PAGE HERE
+import ThankYouPage from './feedback/pages/ThankYouPage';
 
 import AdminLayout from './admin/pages/AdminLayout';
 import DashboardPage from './admin/pages/DashboardPage';
@@ -22,6 +26,9 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <Navigate to="/palaute" replace /> },
       { path: '/palaute', element: <FeedbackPage /> },
+
+      // 2. ADD THE ROUTE FOR YOUR NEW PAGE HERE
+      { path: '/palaute/kiitos', element: <ThankYouPage /> },
 
       { path: '/hallinta/kirjaudu', element: <LoginPage /> },
 
@@ -50,4 +57,3 @@ export const router = createBrowserRouter([
     ],
   },
 ]);
-
