@@ -1,6 +1,6 @@
 // src/admin/components/AdminSidebar.tsx
-import { useEffect, useState } from "react";
-import { NavLink } from "react-router-dom";
+import { useEffect, useState } from 'react';
+import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
   ClipboardList,
@@ -8,30 +8,31 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
-} from "lucide-react";
-import metropolia from "../../assets/metropolia_main_logo.png";
-import metropoliaSmall from "../../assets/metropolia_logo_small.png";
+  BarChart3,
+} from 'lucide-react';
+import metropolia from '../../assets/metropolia_main_logo.png';
+import metropoliaSmall from '../../assets/metropolia_logo_small.png';
 
 const linkBase =
-  "flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-peach-50 font-heading text-[15px] transition";
+  'flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-peach-50 font-heading text-[15px] transition';
 const active =
-  "bg-peach-50 text-ink font-semibold border border-line";
+  'bg-peach-50 text-ink font-semibold border border-line';
 
 export default function AdminSidebar() {
   const [collapsed, setCollapsed] = useState(false);
 
   // restore persisted preference
   useEffect(() => {
-    const raw = localStorage.getItem("adminSidebarCollapsed");
-    if (raw === "1") setCollapsed(true);
+    const raw = localStorage.getItem('adminSidebarCollapsed');
+    if (raw === '1') setCollapsed(true);
   }, []);
 
   // persist on change
   useEffect(() => {
-    localStorage.setItem("adminSidebarCollapsed", collapsed ? "1" : "0");
+    localStorage.setItem('adminSidebarCollapsed', collapsed ? '1' : '0');
   }, [collapsed]);
 
-  const W = collapsed ? "w-30" : "w-64";
+  const W = collapsed ? 'w-30' : 'w-64';
 
   return (
     <aside
@@ -44,7 +45,7 @@ export default function AdminSidebar() {
         <img
           src={collapsed ? metropoliaSmall : metropolia}
           alt="Metropolia"
-          className={`${collapsed ? "h-10" : "h-10"} w-auto select-none transition-[height] duration-200`}
+          className={`${collapsed ? 'h-10' : 'h-10'} w-auto select-none transition-[height] duration-200`}
           draggable={false}
         />
         {!collapsed && (
@@ -62,7 +63,7 @@ export default function AdminSidebar() {
           to="/hallinta"
           end
           className={({ isActive }) =>
-            `${linkBase} ${isActive ? active : ""} ${collapsed ? "justify-center px-2" : ""}`
+            `${linkBase} ${isActive ? active : ''} ${collapsed ? 'justify-center px-2' : ''}`
           }
           title="Yhteenveto"
         >
@@ -73,7 +74,7 @@ export default function AdminSidebar() {
         <NavLink
           to="/hallinta/vastaukset"
           className={({ isActive }) =>
-            `${linkBase} ${isActive ? active : ""} ${collapsed ? "justify-center px-2" : ""}`
+            `${linkBase} ${isActive ? active : ''} ${collapsed ? 'justify-center px-2' : ''}`
           }
           title="Vastaukset"
         >
@@ -81,10 +82,22 @@ export default function AdminSidebar() {
           {!collapsed && <span>Vastaukset</span>}
         </NavLink>
 
+        {/* LINKS HERE */}
+        <NavLink
+          to="/hallinta/analytiikka"
+          className={({ isActive }) =>
+            `${linkBase} ${isActive ? active : ''} ${collapsed ? 'justify-center px-2' : ''}`
+          }
+          title="Analytiikka"
+        >
+          <BarChart3 size={18} />
+          {!collapsed && <span>Analytiikka</span>}
+        </NavLink>
+
         <NavLink
           to="/hallinta/kyselyt"
           className={({ isActive }) =>
-            `${linkBase} ${isActive ? active : ""} ${collapsed ? "justify-center px-2" : ""}`
+            `${linkBase} ${isActive ? active : ''} ${collapsed ? 'justify-center px-2' : ''}`
           }
           title="Kyselyt"
         >
@@ -95,7 +108,7 @@ export default function AdminSidebar() {
         <NavLink
           to="/hallinta/asetukset"
           className={({ isActive }) =>
-            `${linkBase} ${isActive ? active : ""} ${collapsed ? "justify-center px-2" : ""}`
+            `${linkBase} ${isActive ? active : ''} ${collapsed ? 'justify-center px-2' : ''}`
           }
           title="Asetukset"
         >
@@ -118,8 +131,8 @@ export default function AdminSidebar() {
           hover:bg-peach-50
           text-ink
         "
-        aria-label={collapsed ? "Laajenna sivupalkki" : "Pienennä sivupalkki"}
-        title={collapsed ? "Laajenna" : "Pienennä"}
+        aria-label={collapsed ? 'Laajenna sivupalkki' : 'Pienennä sivupalkki'}
+        title={collapsed ? 'Laajenna' : 'Pienennä'}
       >
         {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
       </button>
