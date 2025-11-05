@@ -1,4 +1,3 @@
-
 import { Request, Response } from 'express';
 import User from '../models/User';
 import { comparePassword, hashPassword } from '../utils/password';
@@ -44,4 +43,37 @@ export const createAdmin = async (_req: Request, res: Response) => {
   const passwordHash = await hashPassword(env.ADMIN_PASSWORD);
   await User.create({ email, passwordHash, role: 'admin' });
   res.json({ ok: true, seeded: true });
+};
+
+// POST /auth/change-password
+export const changePassword = async (req: Request, res: Response) => {
+  // 1. Get user ID from the requireAuth middleware
+  const userId = (req as any).user?.sub;
+  if (!userId) {
+    return res.status(401).json({ error: 'unauthorized' });
+  }
+
+  // 2. Get passwords from the body
+  const { currentPassword, newPassword } = req.body;
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: 'missing_fields' });
+  }
+
+  // 3. Find the user in the database
+  const user = await User.findById(userId);
+  if (!user) {
+    return res.status(404).json({ error: 'user_not_found' });
+  }
+
+  // 4. Check if the CURRENT password is correct
+  const isMatch = await comparePassword(currentPassword, user.passwordHash);
+  if (!isMatch) {
+    return res.status(401).json({ error: 'invalid_current_password' });
+  }
+
+  // 5. Hash and save the NEW password
+  user.passwordHash = await hashPassword(newPassword);
+  await user.save();
+
+  res.json({ ok: true });
 };
