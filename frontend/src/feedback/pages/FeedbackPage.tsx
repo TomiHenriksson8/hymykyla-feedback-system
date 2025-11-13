@@ -9,7 +9,83 @@ type AnswerPayload =
   | { questionId: string; type: "boolean"; valueBoolean: boolean }
   | { questionId: string; type: "text"; valueText: string };
 
-type Locale = "fi" | "en" | "sv";
+// Derive available locales from Question["prompt"]
+type Locale = keyof Question["prompt"];
+
+const UI_TEXT: Record<
+  Locale,
+  {
+    noSurveyTitle: string;
+    noSurveyBody: string;
+    noQuestionsTitle: string;
+    noQuestionsBody: string;
+    thankYouTitle: string;
+    thankYouBody: string;
+    freeTextLabel: string;
+    freeTextPlaceholder: string;
+    requiredError: string;
+    submitSending: string;
+    submitLast: string;
+    submitNext: string;
+    submitError: string;
+    booleanYes: string;
+    booleanNo: string;
+  }
+> = {
+  fi: {
+    noSurveyTitle: "Palautetta ei voi antaa juuri nyt",
+    noSurveyBody:
+      "Aktiivista kyselyä ei löytynyt. Yritä hetken kuluttua uudestaan.",
+    noQuestionsTitle: "Ei kysymyksiä",
+    noQuestionsBody: "Tähän kyselyyn ei ole lisätty yhtään kysymystä.",
+    thankYouTitle: "Kiitos palautteesta",
+    thankYouBody: "Arvostamme aikaasi. Palautteesi auttaa meitä kehittymään.",
+    freeTextLabel: "Vapaa palaute (valinnainen)",
+    freeTextPlaceholder: "Kirjoita palautteesi tähän",
+    requiredError: "Tämä kenttä on pakollinen.",
+    submitSending: "Lähetetään",
+    submitLast: "Lähetä",
+    submitNext: "Seuraava",
+    submitError: "Palautteen lähetys epäonnistui. Yritä uudestaan.",
+    booleanYes: "Kyllä",
+    booleanNo: "En",
+  },
+  en: {
+    noSurveyTitle: "Feedback cannot be given right now",
+    noSurveyBody: "No active survey was found. Please try again in a moment.",
+    noQuestionsTitle: "No questions",
+    noQuestionsBody: "There are no questions in this survey.",
+    thankYouTitle: "Thank you for your feedback",
+    thankYouBody: "We appreciate your time. Your feedback helps us improve.",
+    freeTextLabel: "Open feedback (optional)",
+    freeTextPlaceholder: "Write your feedback here",
+    requiredError: "This field is required.",
+    submitSending: "Sending",
+    submitLast: "Submit",
+    submitNext: "Next",
+    submitError: "Sending feedback failed. Please try again.",
+    booleanYes: "Yes",
+    booleanNo: "No",
+  },
+  sv: {
+    noSurveyTitle: "Det går inte att ge respons just nu",
+    noSurveyBody:
+      "Ingen aktiv enkät hittades. Försök igen om en stund.",
+    noQuestionsTitle: "Inga frågor",
+    noQuestionsBody: "Inga frågor har lagts till i den här enkäten.",
+    thankYouTitle: "Tack för din respons",
+    thankYouBody: "Vi uppskattar din tid. Din respons hjälper oss att bli bättre.",
+    freeTextLabel: "Fritt svar (valfritt)",
+    freeTextPlaceholder: "Skriv din respons här",
+    requiredError: "Det här fältet är obligatoriskt.",
+    submitSending: "Skickar",
+    submitLast: "Skicka",
+    submitNext: "Nästa",
+    submitError: "Det gick inte att skicka responsen. Försök igen.",
+    booleanYes: "Ja",
+    booleanNo: "Nej",
+  },
+};
 
 type AnswersById = Record<string, unknown>;
 
@@ -41,6 +117,8 @@ export default function FeedbackPage() {
   const [restartCountdown, setRestartCountdown] =
     useState(FEEDBACK_RESTART_SECONDS);
   const [locale, setLocale] = useState<Locale>("fi");
+
+  const ui = UI_TEXT[locale];
 
   // Sort questions by order so that admin ordering is respected
   const questions = useMemo(() => {
@@ -81,7 +159,10 @@ export default function FeedbackPage() {
     setTextError(null);
   }, [survey?._id]);
 
-  async function finishAndSubmit(latestQuestionId?: string, latestValue?: unknown) {
+  async function finishAndSubmit(
+    latestQuestionId?: string,
+    latestValue?: unknown
+  ) {
     if (!survey) return;
     const allAnswers: AnswersById = { ...answers };
     if (latestQuestionId) {
@@ -159,7 +240,7 @@ export default function FeedbackPage() {
     const value = (answers[question._id] ?? "") as string;
     const trimmed = value.trim();
     if (question.required && trimmed.length === 0) {
-      setTextError("Tämä kenttä on pakollinen.");
+      setTextError(ui.requiredError);
       return;
     }
     await handleAnswerAndNext(question, trimmed);
@@ -185,10 +266,10 @@ export default function FeedbackPage() {
     return (
       <FullScreenShell>
         <Card>
-          <h1 className="text-2xl font-semibold text-ink mb-4">Palautetta ei voi antaa juuri nyt</h1>
-          <p className="text-ink-2">
-            Aktiivista kyselyä ei löytynyt. Yritä hetken kuluttua uudestaan.
-          </p>
+          <h1 className="text-2xl font-semibold text-ink mb-4">
+            {ui.noSurveyTitle}
+          </h1>
+          <p className="text-ink-2">{ui.noSurveyBody}</p>
         </Card>
       </FullScreenShell>
     );
@@ -198,8 +279,10 @@ export default function FeedbackPage() {
     return (
       <FullScreenShell>
         <Card>
-          <h1 className="text-2xl font-semibold text-ink mb-4">Ei kysymyksiä</h1>
-          <p className="text-ink-2">Tähän kyselyyn ei ole lisätty yhtään kysymystä.</p>
+          <h1 className="text-2xl font-semibold text-ink mb-4">
+            {ui.noQuestionsTitle}
+          </h1>
+          <p className="text-ink-2">{ui.noQuestionsBody}</p>
         </Card>
       </FullScreenShell>
     );
@@ -207,16 +290,21 @@ export default function FeedbackPage() {
 
   // Thank you screen, merged into the same page
   if (isSuccess) {
+    const restartText =
+      locale === "fi"
+        ? `Uusi kysely alkaa automaattisesti ${restartCountdown} sekunnin kuluttua.`
+        : locale === "en"
+        ? `A new survey will start automatically in ${restartCountdown} seconds.`
+        : `En ny enkät startar automatiskt om ${restartCountdown} sekunder.`;
+
     return (
       <FullScreenShell>
         <Card>
-          <h1 className="text-3xl font-bold text-ink mb-4">Kiitos palautteesta</h1>
-          <p className="text-lg text-ink-2 mb-4">
-            Arvostamme aikaasi. Palautteesi auttaa meitä kehittymään.
-          </p>
-          <p className="text-sm text-ink-3">
-            Uusi kysely alkaa automaattisesti {restartCountdown} sekunnin kuluttua.
-          </p>
+          <h1 className="text-3xl font-bold text-ink mb-4">
+            {ui.thankYouTitle}
+          </h1>
+          <p className="text-lg text-ink-2 mb-4">{ui.thankYouBody}</p>
+          <p className="text-sm text-ink-3">{restartText}</p>
         </Card>
       </FullScreenShell>
     );
@@ -226,9 +314,21 @@ export default function FeedbackPage() {
     return null;
   }
 
-  const stepLabel = `Kysymys ${currentIndex + 1} / ${questions.length}`;
+  const stepLabel =
+    locale === "fi"
+      ? `Kysymys ${currentIndex + 1} / ${questions.length}`
+      : locale === "en"
+      ? `Question ${currentIndex + 1} / ${questions.length}`
+      : `Fråga ${currentIndex + 1} / ${questions.length}`;
+
   const promptText =
-  currentQuestion.prompt[locale] ?? currentQuestion.prompt.fi;
+    currentQuestion.prompt[locale] ?? currentQuestion.prompt.fi;
+
+  const submitLabel = isSubmitting
+    ? ui.submitSending
+    : currentIndex === questions.length - 1
+    ? ui.submitLast
+    : ui.submitNext;
 
   return (
     <FullScreenShell>
@@ -272,6 +372,8 @@ export default function FeedbackPage() {
           <BooleanQuestion
             value={answers[currentQuestion._id] as boolean | undefined}
             onSelect={(val) => handleAnswerAndNext(currentQuestion, val)}
+            yesLabel={ui.booleanYes}
+            noLabel={ui.booleanNo}
           />
         )}
 
@@ -281,8 +383,12 @@ export default function FeedbackPage() {
               value={(answers[currentQuestion._id] as string | undefined) ?? ""}
               onChange={(v) => handleTextChange(currentQuestion, v)}
               maxLength={currentQuestion.maxLength ?? 1000}
+              label={ui.freeTextLabel}
+              placeholder={ui.freeTextPlaceholder}
             />
-            {textError && <p className="mt-2 text-sm text-danger">{textError}</p>}
+            {textError && (
+              <p className="mt-2 text-sm text-danger">{textError}</p>
+            )}
 
             <div className="mt-6 flex justify-center">
               <button
@@ -291,14 +397,12 @@ export default function FeedbackPage() {
                 className="inline-flex px-8 py-3 rounded-full bg-brand text-white font-semibold text-lg hover:bg-brand-600 focus:outline-none focus:ring-2 focus:ring-brand"
                 disabled={isSubmitting}
               >
-                {isSubmitting ? "Lähetetään" : currentIndex === questions.length - 1 ? "Lähetä" : "Seuraava"}
+                {submitLabel}
               </button>
             </div>
 
             {isSubmitError && (
-              <p className="mt-3 text-sm text-danger">
-                Palautteen lähetys epäonnistui. Yritä uudestaan.
-              </p>
+              <p className="mt-3 text-sm text-danger">{ui.submitError}</p>
             )}
           </div>
         )}
@@ -357,7 +461,11 @@ function ScaleQuestion({ question, value, onSelect }: ScaleProps) {
               ].join(" ")}
             >
               {src ? (
-                <img src={src} alt={`Arvosana ${val}`} className="w-16 h-16 object-contain" />
+                <img
+                  src={src}
+                  alt={`Arvosana ${val}`}
+                  className="w-16 h-16 object-contain"
+                />
               ) : (
                 <span className="text-xl font-semibold text-ink">{val}</span>
               )}
@@ -372,9 +480,16 @@ function ScaleQuestion({ question, value, onSelect }: ScaleProps) {
 type BooleanProps = {
   value?: boolean;
   onSelect: (v: boolean) => void;
+  yesLabel: string;
+  noLabel: string;
 };
 
-function BooleanQuestion({ value, onSelect }: BooleanProps) {
+function BooleanQuestion({
+  value,
+  onSelect,
+  yesLabel,
+  noLabel,
+}: BooleanProps) {
   return (
     <div className="flex justify-center gap-4 mt-4">
       <button
@@ -382,20 +497,24 @@ function BooleanQuestion({ value, onSelect }: BooleanProps) {
         onClick={() => onSelect(false)}
         className={[
           "px-6 py-3 rounded-full text-lg font-semibold border border-line bg-white",
-          value === false ? "bg-brand text-white border-brand" : "hover:bg-peach-50",
+          value === false
+            ? "bg-brand text-white border-brand"
+            : "hover:bg-peach-50",
         ].join(" ")}
       >
-        En
+        {noLabel}
       </button>
       <button
         type="button"
         onClick={() => onSelect(true)}
         className={[
           "px-6 py-3 rounded-full text-lg font-semibold border border-line bg-white",
-          value === true ? "bg-brand text-white border-brand" : "hover:bg-peach-50",
+          value === true
+            ? "bg-brand text-white border-brand"
+            : "hover:bg-peach-50",
         ].join(" ")}
       >
-        Kyllä
+        {yesLabel}
       </button>
     </div>
   );
@@ -405,19 +524,27 @@ type TextProps = {
   value: string;
   onChange: (v: string) => void;
   maxLength: number;
+  label: string;
+  placeholder: string;
 };
 
-function QuestionText({ value, onChange, maxLength }: TextProps) {
+function QuestionText({
+  value,
+  onChange,
+  maxLength,
+  label,
+  placeholder,
+}: TextProps) {
   return (
     <div>
-      <p className="text-sm text-ink-3 mb-2">Vapaa palaute (valinnainen)</p>
+      <p className="text-sm text-ink-3 mb-2">{label}</p>
       <textarea
         rows={4}
         value={value}
         maxLength={maxLength}
         onChange={(e) => onChange(e.target.value)}
         className="w-full p-3 rounded-xl border border-line focus:outline-none focus:ring-2 focus:ring-brand bg-peach-50"
-        placeholder="Kirjoita palautteesi tähän"
+        placeholder={placeholder}
       />
       <div className="mt-1 text-right text-xs text-ink-3">
         {value.length} / {maxLength}

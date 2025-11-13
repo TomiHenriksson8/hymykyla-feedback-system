@@ -44,6 +44,7 @@ app.use('/surveys', requireAuth, surveyRoutes);
 app.use('/responses', requireAuth, responseRoutes);
 
 
+
 // --- Root and Error Handlers ---
 app.get('/', (_req, res) => res.json({ name: 'hymykylä-api', status: 'running' }));
 
