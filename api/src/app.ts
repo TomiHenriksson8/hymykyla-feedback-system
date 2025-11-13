@@ -12,6 +12,7 @@ import feedbackRoutes from './routes/feedback.routes';
 import authRoutes from './routes/auth.routes';
 import adminRoutes from './routes/admin.routes';
 import publicRoutes from './routes/public.routes'; 
+import responseRoutes from './routes/response.routes';
 
 export const app = express();
 
@@ -39,6 +40,9 @@ app.use('/public', publicRoutes);
 // requireAuth middleware protects these
 app.use('/surveys', requireAuth, surveyRoutes);
 app.use('/admin', requireAuth, adminRoutes);
+app.use('/surveys', requireAuth, surveyRoutes);
+app.use('/responses', requireAuth, responseRoutes);
+
 
 // --- Root and Error Handlers ---
 app.get('/', (_req, res) => res.json({ name: 'hymykylä-api', status: 'running' }));
