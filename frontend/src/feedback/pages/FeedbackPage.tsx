@@ -9,6 +9,8 @@ type AnswerPayload =
   | { questionId: string; type: "boolean"; valueBoolean: boolean }
   | { questionId: string; type: "text"; valueText: string };
 
+type Locale = "fi" | "en" | "sv";
+
 type AnswersById = Record<string, unknown>;
 
 // Face images for scale questions.
@@ -36,7 +38,9 @@ export default function FeedbackPage() {
   const [answers, setAnswers] = useState<AnswersById>({});
   const [currentIndex, setCurrentIndex] = useState(0);
   const [textError, setTextError] = useState<string | null>(null);
-  const [restartCountdown, setRestartCountdown] = useState(FEEDBACK_RESTART_SECONDS);
+  const [restartCountdown, setRestartCountdown] =
+    useState(FEEDBACK_RESTART_SECONDS);
+  const [locale, setLocale] = useState<Locale>("fi");
 
   // Sort questions by order so that admin ordering is respected
   const questions = useMemo(() => {
@@ -223,18 +227,37 @@ export default function FeedbackPage() {
   }
 
   const stepLabel = `Kysymys ${currentIndex + 1} / ${questions.length}`;
-  const promptFi = currentQuestion.prompt.fi;
+  const promptText =
+  currentQuestion.prompt[locale] ?? currentQuestion.prompt.fi;
 
   return (
     <FullScreenShell>
       <Card>
         <div className="flex items-center justify-between text-xs text-ink-3 mb-4">
-          <div />
+          <div className="flex gap-2">
+            {(["fi", "en", "sv"] as Locale[]).map((lang) => (
+              <button
+                key={lang}
+                type="button"
+                onClick={() => setLocale(lang)}
+                className={[
+                  "px-2 py-1 rounded-full border text-xs",
+                  locale === lang
+                    ? "bg-brand text-white border-brand"
+                    : "bg-white text-ink border-line",
+                ].join(" ")}
+              >
+                {lang === "fi" && "Suomi"}
+                {lang === "en" && "English"}
+                {lang === "sv" && "Svenska"}
+              </button>
+            ))}
+          </div>
           <div>{stepLabel}</div>
         </div>
 
         <h1 className="text-3xl md:text-4xl font-heading text-ink text-center mb-8">
-          {promptFi}
+          {promptText}
         </h1>
 
         {currentQuestion.type === "scale5" && (
