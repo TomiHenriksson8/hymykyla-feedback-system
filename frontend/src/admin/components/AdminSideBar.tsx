@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
-  ClipboardList,
   ListChecks,
   Settings,
   ChevronLeft,
@@ -69,17 +68,6 @@ export default function AdminSidebar() {
         >
           <LayoutDashboard size={18} />
           {!collapsed && <span>Yhteenveto</span>}
-        </NavLink>
-
-        <NavLink
-          to="/hallinta/vastaukset"
-          className={({ isActive }) =>
-            `${linkBase} ${isActive ? active : ''} ${collapsed ? 'justify-center px-2' : ''}`
-          }
-          title="Vastaukset"
-        >
-          <ClipboardList size={18} />
-          {!collapsed && <span>Vastaukset</span>}
         </NavLink>
 
         {/* LINKS HERE */}

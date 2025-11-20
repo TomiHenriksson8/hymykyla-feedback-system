@@ -1,60 +1,61 @@
-import { Request, Response } from 'express';
-import { z } from 'zod';
-import SurveyModel, { Survey as SurveyType, Question } from '../models/Survey';
-import ResponseModel from '../models/Response';
-import { SubmitPayload } from '../schemas/submit';
+import ResponseModel from "../models/Response";
+import SurveyModel from "../models/Survey";
 
-type SubmitBody = z.infer<typeof SubmitPayload>;
+// inside your submitFeedback controller:
 
-export const submitFeedback = async (req: Request, res: Response) => {
-  // 1) Validate payload
-  const parsed = SubmitPayload.safeParse(req.body);
-  if (!parsed.success) return res.status(400).send('Invalid payload');
-  const body: SubmitBody = parsed.data;
+export const submitFeedback = async (req: any, res: any) => {
+  try {
+    const { surveyId, answers: payloadAnswers } = req.body;
 
-  // 2) Load survey (lean for speed, but typed)
-  const survey = await SurveyModel.findById(body.surveyId).lean<SurveyType>().exec();
-  if (!survey || !survey.isActive) return res.status(400).send('Invalid survey');
-
-  // 3) Build quick lookup for questions
-  const qMap = new Map<string, Question>(survey.questions.map((q) => [q._id.toString(), q]));
-
-  // 4) Validate answers against survey questions
-  for (const a of body.answers) {
-    const q = qMap.get(a.questionId);
-    if (!q) return res.status(400).send('Unknown question');
-    if (a.type !== q.type) return res.status(400).send('Type mismatch');
-
-    if (q.type === 'scale5') {
-      const v = a.valueNumber;
-      const min = q.min ?? 1;
-      const max = q.max ?? 5;
-      if (!(Number.isInteger(v) && v! >= min && v! <= max)) {
-        return res.status(400).send('Invalid scale value');
-      }
-    } else if (q.type === 'boolean') {
-      if (typeof a.valueBoolean !== 'boolean') {
-        return res.status(400).send('Invalid boolean value');
-      }
-    } else if (q.type === 'text') {
-      const limit = q.maxLength ?? 1000;
-      if (a.valueText && a.valueText.length > limit) {
-        return res.status(400).send('Text too long');
-      }
+    const survey = await SurveyModel.findById(surveyId).lean();
+    if (!survey) {
+      return res.status(404).json({ error: "survey_not_found" });
     }
+
+    // Map question id to question object for prompt lookup
+    const questionMap = new Map<string, any>();
+    for (const q of survey.questions) {
+      questionMap.set(String(q._id), q);
+    }
+
+    const answersForDb = payloadAnswers.map((a: any) => {
+      const q = questionMap.get(String(a.questionId));
+
+      // Build base answer
+      const base: any = {
+        questionId: a.questionId,
+        type: a.type,
+      };
+
+      if (a.type === "scale5") {
+        base.valueNumber = a.valueNumber;
+      } else if (a.type === "boolean") {
+        base.valueBoolean = a.valueBoolean;
+      } else if (a.type === "text") {
+        base.valueText = a.valueText;
+      }
+
+      // Attach snapshot of question prompt if found
+      if (q && q.prompt) {
+        base.questionPrompt = {
+          fi: q.prompt.fi ?? undefined,
+          en: q.prompt.en ?? undefined,
+          sv: q.prompt.sv ?? undefined,
+        };
+      }
+
+      return base;
+    });
+
+    await ResponseModel.create({
+      surveyId: survey._id,
+      surveyVersion: survey.version ?? 1,
+      answers: answersForDb,
+    });
+
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "internal_error" });
   }
-
-  // (Optional strictness you can enable later)
-  // - ensure required questions are answered
-  // - ensure no duplicate answers for same question
-
-  // 5) Persist response
-  await ResponseModel.create({
-    surveyId: (survey as any)._id,         // _id exists on lean doc at runtime
-    surveyVersion: survey.version,
-    answers: body.answers,
-  });
-
-  // 6) No content
-  res.sendStatus(204);
 };

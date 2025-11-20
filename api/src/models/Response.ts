@@ -6,6 +6,12 @@ export interface Answer {
   valueNumber?: number;
   valueBoolean?: boolean;
   valueText?: string;
+  // New field: store question text snapshots per locale
+  questionPrompt?: {
+    fi?: string;
+    en?: string;
+    sv?: string;
+  };
 }
 
 export interface ResponseDoc {
@@ -23,6 +29,12 @@ const AnswerSchema = new Schema<Answer>(
     valueNumber: { type: Number },
     valueBoolean: { type: Boolean },
     valueText: { type: String },
+    // New schema field
+    questionPrompt: {
+      fi: { type: String },
+      en: { type: String },
+      sv: { type: String },
+    },
   },
   { _id: false }
 );
